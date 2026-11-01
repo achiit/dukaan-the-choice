@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>THE CHOICE | CHOOSE YOUR STYLE</title>
+  
+  <!-- Fonts: Cormorant Garamond (Editorial Luxury) + Plus Jakarta Sans (Clean Modern UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              black: '#0A0A0A',
+              card: '#121212',
+              cream: '#FAF9F6',
+              gold: '#C5A880',
+              goldLight: '#E2D1B3',
+              goldDark: '#9E825A',
+              muted: '#737373',
+              border: '#E5E5E5',
+              darkBorder: '#262626'
+            }
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #FAF9F6;
+      color: #0A0A0A;
+      overflow-x: hidden;
+    }
+    .font-luxury {
+      font-family: 'Cormorant Garamond', serif;
+    }
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F1F1F1;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #C5A880;
+      border-radius: 3px;
+    }
+    .gold-gradient {
+      background: linear-gradient(135deg, #C5A880 0%, #E2D1B3 50%, #9E825A 100%);
+    }
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #C5A880 0%, #DFC9A8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(197, 168, 128, 0.12) 0%, rgba(255, 255, 255, 0) 70%);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="selection:bg-brand-gold selection:text-white">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    // --- Lucide Icon Helper ---
+    const Icon = ({ name, className = "w-5 h-5", ...props }) => {
+      const containerRef = useRef(null);
+      useEffect(() => {
+        if (containerRef.current) {
+          containerRef.current.innerHTML = `<i data-lucide="${name}"></i>`;
+          if (window.lucide) {
+            window.lucide.createIcons({
+              root: containerRef.current
+            });
+          }
+        }
+      }, [name]);
+      return <span ref={containerRef} className={`inline-flex items-center justify-center ${className}`} {...props} />;
+    };
+
+    // ==========================================
+    // INITIAL SEED DATA
+    // ==========================================
+    const DEFAULT_PRODUCTS = [
+      {
+        id: "TC-101",
+        name: "L’Élégance Cashmere Overcoat",
+        category: "Jackets",
+        gender: "Men's Fashion",
+        price: 495,
+        originalPrice: 650,
+        badge: "Best Seller",
+        rating: 4.9,
+        reviewsCount: 38,
+        description: "Meticulously tailored from double-faced Italian cashmere blend. Features hand-stitched notch lapels, horn buttons, and a silhouette that exemplifies modern power dressing.",
+        sizes: ["S", "M", "L", "XL"],
+        colors: [
+          { name: "Onyx Black", hex: "#111111" },
+          { name: "Camel", hex: "#C19A6B" }
+        ],
+        stock: 14,
+        images: [
+          "https://images.unsplash.com/photo-1544022613-e87ca75a784a?q=80&w=1000&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1000&auto=format&fit=crop"
+        ],
+        featured: true,
+        isNew: false
+      },
+      {
+        id: "TC-102",
+        name: "Silk Organza High-Collar Blouse",
+        category: "Women's Fashion",
+        gender: "Women's Fashion",
+        price: 240,
+        originalPrice: 310,
+        badge: "New Arrival",
+        rating: 5.0,
+        reviewsCount: 22,
+        description: "Crafted from 100% pure Mulberry silk organza. Defined by architectural pleated cuffs and a neck scarf detail that drapes effortlessly for gala evenings.",
+        sizes: ["XS", "S", "M", "L"],
+        colors: [
+          { name: "Pearl White", hex: "#FDFDFD" },
+          { name: "Champagne", hex: "#F7E7CE" }
+        ],
+        stock: 19,
+        images: [
+          "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1000&auto=format&fit=crop"
+        ],
+        featured: true,
+        isNew: true
+      },
+      {
+        id: "TC-103",
+        name: "Milano Structured Wool Blazer",
+        category: "Jackets",
+        gender: "Women's Fashion",
+        price: 385,
+        originalPrice: 480,
+        badge: "Trending",
+        rating: 4.8,
+        reviewsCount: 47,
+        description: "Sculpted hour-glass silhouette lined in gold cupro silk. Finished with bespoke brushed gold crest buttons for undeniable sophistication.",
+        sizes: ["S", "M", "L", "XL"],
+        colors: [
+          { name: "Classic Navy", hex: "#1B2430" },
+          { name: "Midnight Black", hex: "#000000" }
+        ],
+        stock: 8,
+        images: [
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1000&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1550614000-4895a10e1bfd?q=80&w=1000&auto=format&fit=crop"
+        ],
+        featured: true,
+        isNew: false
+      },
+      {
+        id: "TC-104",
+        name: "Artisan Leather Chelsea Boots",
+        category: "Shoes",
+        gender: "Men's Fashion",
+        price: 320,
+        originalPrice: 390,
+        badge: "Handcrafted",
+        rating: 4.9,
+        reviewsCount: 64,
+        description: "Blake-stitched Tuscan calfskin leather with supple glove-leather lining and durable Goodyear welt rubber tread for all-weather luxury.",
+        sizes: ["40", "41", "42", "43", "44", "45"],
+        colors: [
+          { name: "Espresso", hex: "#3D2B1F" },
+          { name: "Polished Black", hex: "#111111" }
+        ],
+        stock: 25,
+        images: [
+          "https://images.unsplash.com/photo-1638247025967-b4e38f787b76?q=80&w=1000&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?q=80&w=1000&auto=format&fit=crop"
+        ],
+        featured: true,
+        isNew: false
+      },
+      {
+        id: "TC-105",
+        name: "Supima Heavyweight Minimalist Tee",
+        category: "T-Shirts",
+        gender: "Men's Fashion",
+        price: 95,
+        originalPrice: 120,
+        badge: "Essential",
+        rating: 4.7,
+        reviewsCount: 112,
+        description: "260 GSM extra-long staple Supima cotton. Retains deep dye and crisp drape wash after wash. An indispensable wardrobe cornerstone.",
+        sizes: ["S", "M", "L", "XL", "XXL"],
+        colors: [
+          { name: "Optical White", hex: "#FFFFFF" },
+          { name: "Charcoal", hex: "#333333" },
+          { name: "Raw Umber", hex: "#7B6252" }
+        ],
+        stock: 55,
+        images: [
+          "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=1000&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1000&auto=format&fit=crop"
+        ],
+        featured: false,
+        isNew: true
+      },
+      {
+        id: "TC-106",
+        name: "Venetian Pleated Trousers",
+        category: "Pants & Jeans",
+        gender: "Men's Fashion",
+        price: 210,
+        originalPrice: 260,
+        badge: "Special Offer",
+        rating: 4.8,
+        reviewsCount: 19,
+        description: "High-waisted double front pleats tailored with breathable tropical virgin wool and side waist adjusters for a bespoke fit without belt loops.",
+        sizes: ["30", "32", "34", "36"],
+        colors: [
+          { name: "Olive Drab", hex: "#555D50" },
+          { name: "Sand", hex: "#D8C7B5" }
+        ],
+        stock: 12,
+        images: [
+          "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=1000&auto=format&fit=crop"
+        ],
+        featured: false,
+        isNew: false
+      },
+      {
+        id: "TC-107",
+        name: "Luxe Croc-Embossed Leather Bag",
+        category: "Accessories",
+        gender: "Women's Fashion",
+        price: 520,
+        originalPrice: 680,
+        badge: "Limited Edition",
+        rating: 5.0,
+        reviewsCount: 31,
+        description: "Hand-molded full-grain calf leather featuring 24K brushed gold lock hardware and detachable shoulder strap. Elevates both tailoring and casual styling.",
+        sizes: ["One Size"],
+        colors: [
+          { name: "Noir", hex: "#0E0E0E" },
+          { name: "Cognac", hex: "#9E4717" }
+        ],
+        stock: 5,
+        images: [
+          "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=1000&auto=format&fit=crop",
+          "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?q=80&w=1000&auto=format&fit=crop"
+        ],
+        featured: true,
+        isNew: true
+      },
+      {
+        id: "TC-108",
+        name: "Riviera Crisp Linen Spread Shirt",
+        category: "Shirts",
+        gender: "Men's Fashion",
+        price: 165,
+        originalPrice: 195,
+        badge: "Summer Luxe",
+        rating: 4.6,
+        reviewsCount: 29,
+        description: "Woven in Normandy from French flax. Pre-washed for a super soft hand feel with genuine mother-of-pearl buttons.",
+        sizes: ["S", "M", "L", "XL"],
+        colors: [
+          { name: "Sky Mist", hex: "#BDD1DE" },
+          { name: "Pure White", hex: "#FFFFFF" }
+        ],
+        stock: 32,
+        images: [
+          "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=1000&auto=format&fit=crop"
+        ],
+        featured: false,
+        isNew: false
+      }
+    ];
+
+    const CATEGORIES = [
+      "All Collections",
+      "Men's Fashion",
+      "Women's Fashion",
+      "T-Shirts",
+      "Shirts",
+      "Pants & Jeans",
+      "Shoes",
+      "Jackets",
+      "Accessories",
+      "New Arrivals",
+      "Sale Collection"
+    ];
+
+    const BANGLADESH_DISTRICTS = [
+      { name: "Dhaka", areas: ["Gulshan 1", "Gulshan 2", "Banani", "Dhanmondi", "Uttara", "Mirpur", "Bashundhara R/A", "Mohakhali"] },
+      { name: "Chittagong", areas: ["GEC Circle", "Agrabad", "Nasirabad", "Halishahar", "Khulshi"] },
+      { name: "Sylhet", areas: ["Zindabazar", "Upashahar", "Amberkhana", "Shahjalal Uposhohor"] },
+      { name: "Rajshahi", areas: ["Kazla", "Boalia", "Motihar"] },
+      { name: "Khulna", areas: ["Sonadanga", "Boyra", "Khalishpur"] },
+      { name: "International / Global", areas: ["Standard Air Express (DHL / FedEx)"] }
+    ];
+
+    // ==========================================
+    // MAIN APP COMPONENT
+    // ==========================================
+    function App() {
+      // --- State: Data ---
+      const [products, setProducts] = useState(() => {
+        const saved = localStorage.getItem("tc_products");
+        return saved ? JSON.parse(saved) : DEFAULT_PRODUCTS;
+      });
+
+      const [cart, setCart] = useState(() => {
+        const saved = localStorage.getItem("tc_cart");
+        return saved ? JSON.parse(saved) : [];
+      });
+
+      const [wishlist, setWishlist] = useState(() => {
+        const saved = localStorage.getItem("tc_wishlist");
+        return saved ? JSON.parse(saved) : ["TC-101", "TC-107"];
+      });
+
+      const [orders, setOrders] = useState(() => {
+        const saved = localStorage.getItem("tc_orders");
+        return saved ? JSON.parse(saved) : [
+          {
+            id: "ORD-94821",
+            date: "2026-10-28",
+            customer: { name: "Tanvir Ahmed", phone: "+880 1711 000000", district: "Dhaka", area: "Gulshan 2", address: "Road 71, House 14" },
+            items: [
+              { id: "TC-101", name: "L’Élégance Cashmere Overcoat", price: 495, size: "L", color: "Onyx Black", quantity: 1 }
+            ],
+            total: 495,
+            paymentMethod: "Cash on Delivery",
+            status: "Delivered"
+          }
+        ];
+      });
+
+      // --- State: Auth ---
+      const [currentUser, setCurrentUser] = useState(() => {
+        const saved = localStorage.getItem("tc_user");
+        return saved ? JSON.parse(saved) : { name: "Guest VIP", email: "vip@thechoice.com", role: "customer" };
+      });
+
+      // --- Navigation View State ---
+      // views: 'home' | 'shop' | 'product-detail' | 'checkout' | 'account' | 'admin' | 'wishlist'
+      const [activeView, setActiveView] = useState("home");
+      const [selectedProduct, setSelectedProduct] = useState(null);
+      const [isCartOpen, setIsCartOpen] = useState(false);
+      const [searchQuery, setSearchQuery] = useState("");
+      const [selectedCategory, setSelectedCategory] = useState("All Collections");
+      const [sortOption, setSortOption] = useState("featured");
+      const [notification, setNotification] = useState(null);
+
+      // Save states
+      useEffect(() => {
+        localStorage.setItem("tc_products", JSON.stringify(products));
+      }, [products]);
+
+      useEffect(() => {
+        localStorage.setItem("tc_cart", JSON.stringify(cart));
+      }, [cart]);
+
+      useEffect(() => {
+        localStorage.setItem("tc_wishlist", JSON.stringify(wishlist));
+      }, [wishlist]);
+
+      useEffect(() => {
+        localStorage.setItem("tc_orders", JSON.stringify(orders));
+      }, [orders]);
+
+      useEffect(() => {
+        localStorage.setItem("tc_user", JSON.stringify(currentUser));
+      }, [currentUser]);
+
+      // --- Toast Notification ---
+      const notify = (msg, type = "success") => {
+        setNotification({ msg, type });
+        setTimeout(() => setNotification(null), 3500);
+      };
+
+      // --- Cart Actions ---
+      const addToCart = (product, size, color, quantity = 1) => {
+        const chosenSize = size || product.sizes[0];
+        const chosenColor = color || (product.colors[0]?.name || "Default");
+        const existingIndex = cart.findIndex(
+          item => item.id === product.id && item.size === chosenSize && item.color === chosenColor
+        );
+
+        let updated = [...cart];
+        if (existingIndex > -1) {
+          updated[existingIndex].quantity += quantity;
+        } else {
+          updated.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.images[0],
+            size: chosenSize,
+            color: chosenColor,
+            quantity: quantity,
+            stock: product.stock
+          });
+        }
+        setCart(updated);
+        notify(`Added "${product.name}" to your luxury bag.`);
+        setIsCartOpen(true);
+      };
+
+      const updateCartQty = (index, delta) => {
+        let updated = [...cart];
+        const newQty = updated[index].quantity + delta;
+        if (newQty <= 0) {
+          updated.splice(index, 1);
+          notify("Item removed from bag.");
+        } else {
+          updated[index].quantity = newQty;
+        }
+        setCart(updated);
+      };
+
+      const removeFromCart = (index) => {
+        let updated = [...cart];
+        updated.splice(index, 1);
+        setCart(updated);
+        notify("Item removed.");
+      };
+
+      const toggleWishlist = (id) => {
+        if (wishlist.includes(id)) {
+          setWishlist(wishlist.filter(x => x !== id));
+          notify("Removed from Wishlist.");
+        } else {
+          setWishlist([...wishlist, id]);
+          notify("Saved to your Personal Wishlist.");
+        }
+      };
+
+      const cartTotal = useMemo(() => {
+        return cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+      }, [cart]);
+
+      // --- Product Details Navigation ---
+      const viewProductDetails = (product) => {
+        setSelectedProduct(product);
+        setActiveView("product-detail");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col bg-[#FAF9F6] text-brand-black">
+          {/* Notification Toast */}
+          {notification && (
+            <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-brand-black text-brand-cream border border-brand-gold px-5 py-3.5 rounded shadow-2xl transition-all animate-bounce">
+              <Icon name="sparkles" className="w-5 h-5 text-brand-gold" />
+              <span className="text-sm font-medium tracking-wide">{notification.msg}</span>
+            </div>
+          )}
+
+          {/* Top VIP Marquee Announcement Bar */}
+          <div className="bg-brand-black text-[#E5E5E5] text-[11px] uppercase tracking-[0.25em] py-2.5 px-4 text-center border-b border-brand-darkBorder/30">
+            <span className="text-brand-gold font-semibold">Complimentary White-Glove Delivery</span> on orders over $250 • Worldwide Express Shipping Available
+          </div>
+
+          {/* Navigation Bar */}
+          <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-brand-border">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between h-20">
+                {/* Brand Logo & Tagline */}
+                <div 
+                  onClick={() => { setActiveView("home"); setSelectedCategory("All Collections"); }}
+                  className="cursor-pointer group flex flex-col"
+                >
+                  <span className="font-luxury text-3xl md:text-4xl tracking-[0.22em] font-bold text-brand-black group-hover:text-brand-goldDark transition-colors">
+                    THE CHOICE
+                  </span>
+                  <span className="text-[9px] tracking-[0.38em] text-brand-gold font-semibold -mt-1 uppercase">
+                    CHOOSE YOUR STYLE.
+                  </span>
+                </div>
+
+                {/* Desktop Primary Nav Links */}
+                <nav className="hidden md:flex items-center space-x-8 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <button 
+                    onClick={() => { setActiveView("home"); }}
+                    className={`pb-1 transition-all ${activeView === 'home' ? 'border-b-2 border-brand-gold text-brand-black' : 'text-neutral-500 hover:text-brand-black'}`}
+                  >
+                    Home
+                  </button>
+                  <button 
+                    onClick={() => { setSelectedCategory("Men's Fashion"); setActiveView("shop"); }}
+                    className={`pb-1 transition-all ${activeView === 'shop' && selectedCategory === "Men's Fashion" ? 'border-b-2 border-brand-gold text-brand-black' : 'text-neutral-500 hover:text-brand-black'}`}
+                  >
+                    Men
+                  </button>
+                  <button 
+                    onClick={() => { setSelectedCategory("Women's Fashion"); setActiveView("shop"); }}
+                    className={`pb-1 transition-all ${activeView === 'shop' && selectedCategory === "Women's Fashion" ? 'border-b-2 border-brand-gold text-brand-black' : 'text-neutral-500 hover:text-brand-black'}`}
+                  >
+                    Women
+                  </button>
+                  <button 
+                    onClick={() => { setSelectedCategory("All Collections"); setActiveView("shop"); }}
+                    className={`pb-1 transition-all ${activeView === 'shop' && selectedCategory === 'All Collections' ? 'border-b-2 border-brand-gold text-brand-black' : 'text-neutral-500 hover:text-brand-black'}`}
+                  >
+                    Catalog
+                  </button>
+                  <button 
+                    onClick={() => { setSelectedCategory("Sale Collection"); setActiveView("shop"); }}
+                    className="text-red-700 font-bold hover:text-red-900 transition-colors"
+                  >
+                    Sale
+                  </button>
+                </nav>
+
+                {/* Right Action Icons */}
+                <div className="flex items-center space-x-4 sm:space-x-6">
+                  {/* Search CTA */}
+                  <button 
+                    onClick={() => { setActiveView("shop"); }} 
+                    title="Search" 
+                    className="p-2 text-neutral-800 hover:text-brand-goldDark transition-colors"
+                  >
+                    <Icon name="search" className="w-5 h-5" />
+                  </button>
+
+                  {/* Wishlist */}
+                  <button 
+                    onClick={() => setActiveView("wishlist")} 
+                    title="Wishlist" 
+                    className="relative p-2 text-neutral-800 hover:text-brand-goldDark transition-colors"
+                  >
+                    <Icon name="heart" className="w-5 h-5" />
+                    {wishlist.length > 0 && (
+                      <span className="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
+                        {wishlist.length}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Account / Admin Portal Toggle */}
+                  <button 
+                    onClick={() => setActiveView("account")} 
+                    title="Account / Admin" 
+                    className="p-2 text-neutral-800 hover:text-brand-goldDark transition-colors flex items-center gap-1.5"
+                  >
+                    <Icon name="user" className="w-5 h-5" />
+                    <span className="hidden lg:inline text-xs font-semibold tracking-wider uppercase">
+                      {currentUser?.role === 'admin' ? 'Admin' : 'VIP'}
+                    </span>
+                  </button>
+
+                  {/* Shopping Bag Button */}
+                  <button 
+                    onClick={() => setIsCartOpen(true)}
+                    className="flex items-center gap-2 bg-brand-black text-white px-4 py-2.5 rounded-full text-xs font-semibold tracking-wider uppercase hover:bg-neutral-800 transition-all shadow-sm"
+                  >
+                    <Icon name="shopping-bag" className="w-4 h-4 text-brand-gold" />
+                    <span>Bag ({cart.reduce((a, b) => a + b.quantity, 0)})</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* MAIN VIEW CONTENT ROUTER */}
+          <main className="flex-1">
+            {activeView === "home" && (
+              <HomeView 
+                products={products}
+                onSelectProduct={viewProductDetails}
+                onExploreCategory={(cat) => { setSelectedCategory(cat); setActiveView("shop"); }}
+                wishlist={wishlist}
+                onToggleWishlist={toggleWishlist}
+              />
+            )}
+
+            {activeView === "shop" && (
+              <ShopView 
+                products={products}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                sortOption={sortOption}
+                setSortOption={setSortOption}
+                onSelectProduct={viewProductDetails}
+                wishlist={wishlist}
+                onToggleWishlist={toggleWishlist}
+              />
+            )}
+
+            {activeView === "product-detail" && selectedProduct && (
+              <ProductDetailView 
+                product={selectedProduct}
+                allProducts={products}
+                onSelectProduct={viewProductDetails}
+                onAddToCart={addToCart}
+                wishlist={wishlist}
+                onToggleWishlist={toggleWishlist}
+                onBack={() => setActiveView("shop")}
+              />
+            )}
+
+            {activeView === "checkout" && (
+              <CheckoutView 
+                cart={cart}
+                total={cartTotal}
+                onCompleteOrder={(orderDetails) => {
+                  setOrders([orderDetails, ...orders]);
+                  setCart([]);
+                  notify(`Order ${orderDetails.id} confirmed!`);
+                  setActiveView("account");
+                }}
+                onCancel={() => setActiveView("shop")}
+              />
+            )}
+
+            {activeView === "account" && (
+              <AccountAdminView 
+                currentUser={currentUser}
+                setCurrentUser={setCurrentUser}
+                orders={orders}
+                setOrders={setOrders}
+                products={products}
+                setProducts={setProducts}
+                onSelectProduct={viewProductDetails}
+                notify={notify}
+              />
+            )}
+
+            {activeView === "wishlist" && (
+              <WishlistView 
+                wishlistIds={wishlist}
+                products={products}
+                onSelectProduct={viewProductDetails}
+                onToggleWishlist={toggleWishlist}
+                onAddToCart={addToCart}
+                onExploreShop={() => { setSelectedCategory("All Collections"); setActiveView("shop"); }}
+              />
+            )}
+          </main>
+
+          {/* SLIDE-OVER LUXURY SHOPPING BAG */}
+          <CartDrawer 
+            isOpen={isCartOpen}
+            onClose={() => setIsCartOpen(false)}
+            cart={cart}
+            total={cartTotal}
+            onUpdateQty={updateCartQty}
+            onRemove={removeFromCart}
+            onProceedCheckout={() => {
+              setIsCartOpen(false);
+              setActiveView("checkout");
+            }}
+          />
+
+          {/* FOOTER */}
+          <Footer onNavCategory={(c) => { setSelectedCategory(c); setActiveView("shop"); }} />
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 1. HOME VIEW
+    // ==========================================
+    function HomeView({ products, onSelectProduct, onExploreCategory, wishlist, onToggleWishlist }) {
+      const newArrivals = products.filter(p => p.isNew || p.badge === "New Arrival").slice(0, 4);
+      const bestSellers = products.filter(p => p.badge === "Best Seller" || p.featured).slice(0, 4);
+
+      return (
+        <div className="space-y-24 pb-24">
+          {/* Hero Section */}
+          <section className="relative min-h-[85vh] flex items-center justify-center bg-brand-black text-white overflow-hidden">
+            <div className="absolute inset-0 z-0 opacity-40">
+              <img 
+                src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2000&auto=format&fit=crop" 
+                alt="Luxury Runway Model" 
+                className="w-full h-full object-cover object-center filter grayscale contrast-125"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/60 to-transparent" />
+            </div>
+
+            <div className="relative z-10 max-w-4xl mx-auto px-6 text-center space-y-6 py-20">
+              <span className="inline-block px-4 py-1.5 border border-brand-gold text-brand-gold text-xs tracking-[0.3em] uppercase font-semibold rounded-full bg-brand-black/50 backdrop-blur-sm">
+                Autumn / Winter Haute Collection
+              </span>
+              <h1 className="font-luxury text-5xl sm:text-7xl lg:text-8xl font-normal tracking-tight text-white leading-none">
+                YOUR STYLE.<br />
+                <span className="font-semibold italic gold-gradient-text">YOUR CHOICE.</span>
+              </h1>
+              <p className="max-w-xl mx-auto text-base sm:text-lg text-neutral-300 font-light tracking-wide leading-relaxed">
+                Discover the latest international trends and redefine your personal aesthetic with uncompromising luxury craftsmanship.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                <button 
+                  onClick={() => onExploreCategory("All Collections")}
+                  className="w-full sm:w-auto px-10 py-4 bg-brand-gold hover:bg-brand-goldLight text-brand-black font-semibold uppercase text-xs tracking-[0.25em] transition-all duration-300 shadow-xl"
+                >
+                  Shop The Collection
+                </button>
+                <button 
+                  onClick={() => onExploreCategory("Sale Collection")}
+                  className="w-full sm:w-auto px-8 py-4 border border-white/40 hover:border-brand-gold text-white font-medium uppercase text-xs tracking-[0.2em] transition-all duration-300 bg-white/5 backdrop-blur-md"
+                >
+                  Exclusive Offers
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* Curated Categories Strip */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-xl mx-auto mb-12">
+              <span className="text-xs uppercase tracking-[0.3em] text-brand-gold font-bold">Curated Portfolios</span>
+              <h2 className="font-luxury text-3xl sm:text-4xl font-semibold mt-1">Signature Departments</h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+              {[
+                { label: "Men's Fashion", img: "https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?q=80&w=800&auto=format&fit=crop" },
+                { label: "Women's Fashion", img: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop" },
+                { label: "Jackets", img: "https://images.unsplash.com/photo-1544022613-e87ca75a784a?q=80&w=800&auto=format&fit=crop" },
+                { label: "Accessories", img: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=800&auto=format&fit=crop" }
+              ].map((item, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => onExploreCategory(item.label)}
+                  className="group relative h-80 rounded-sm overflow-hidden cursor-pointer shadow-md bg-neutral-900"
+                >
+                  <img 
+                    src={item.img} 
+                    alt={item.label} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-90 group-hover:brightness-100"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-brand-gold font-medium uppercase tracking-widest">Explore</p>
+                      <h3 className="font-luxury text-2xl text-white font-semibold">{item.label}</h3>
+                    </div>
+                    <span className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white group-hover:bg-brand-gold group-hover:text-black transition-colors">
+                      <Icon name="arrow-up-right" className="w-4 h-4" />
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* New Arrivals Section */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-4 border-b border-brand-border">
+              <div>
+                <span className="text-xs uppercase tracking-[0.25em] text-brand-gold font-bold">New Arrivals</span>
+                <h2 className="font-luxury text-3xl sm:text-4xl font-semibold mt-1">The Latest Haute Cuts</h2>
+              </div>
+              <button 
+                onClick={() => onExploreCategory("New Arrivals")}
+                className="mt-3 md:mt-0 text-xs font-semibold tracking-widest uppercase hover:text-brand-goldDark flex items-center gap-1"
+              >
+                View All New Arrivals <Icon name="chevron-right" className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+              {newArrivals.map(product => (
+                <ProductCard 
+                  key={product.id}
+                  product={product}
+                  onSelectProduct={onSelectProduct}
+                  isWishlisted={wishlist.includes(product.id)}
+                  onToggleWishlist={onToggleWishlist}
+                />
+              ))}
+            </div>
+          </section>
+
+          {/* Luxury Editorial Promotion Banner */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-brand-black text-white rounded-sm overflow-hidden grid grid-cols-1 lg:grid-cols-2 shadow-2xl">
+              <div className="p-10 sm:p-16 flex flex-col justify-center space-y-6">
+                <span className="text-brand-gold text-xs tracking-[0.3em] uppercase font-bold">Atelier Craftsmanship</span>
+                <h2 className="font-luxury text-4xl sm:text-5xl font-normal leading-tight">
+                  Hand-Finished Perfection. Designed for Connoisseurs.
+                </h2>
+                <p className="text-neutral-400 text-sm leading-relaxed font-light">
+                  Every stitch, seam, and contour in THE CHOICE collection is developed alongside master European tailors. From sustainably sourced Mongolian cashmere to full-grain vegetable-tanned leather, we refuse all compromise.
+                </p>
+                <div className="pt-2">
+                  <button 
+                    onClick={() => onExploreCategory("All Collections")}
+                    className="px-8 py-3.5 bg-brand-gold text-brand-black text-xs uppercase tracking-[0.2em] font-semibold hover:bg-white transition-all shadow-md"
+                  >
+                    Experience The Collection
+                  </button>
+                </div>
+              </div>
+              <div className="relative min-h-[360px] lg:min-h-full">
+                <img 
+                  src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1200&auto=format&fit=crop" 
+                  alt="Haute Couture Detail" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Best Sellers Section */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-4 border-b border-brand-border">
+              <div>
+                <span className="text-xs uppercase tracking-[0.25em] text-brand-gold font-bold">Most Coveted</span>
+                <h2 className="font-luxury text-3xl sm:text-4xl font-semibold mt-1">Best Sellers</h2>
+              </div>
+              <button 
+                onClick={() => onExploreCategory("All Collections")}
+                className="mt-3 md:mt-0 text-xs font-semibold tracking-widest uppercase hover:text-brand-goldDark flex items-center gap-1"
+              >
+                Shop Full Catalog <Icon name="chevron-right" className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+              {bestSellers.map(product => (
+                <ProductCard 
+                  key={product.id}
+                  product={product}
+                  onSelectProduct={onSelectProduct}
+                  isWishlisted={wishlist.includes(product.id)}
+                  onToggleWishlist={onToggleWishlist}
+                />
+              ))}
+            </div>
+          </section>
+
+          {/* Value Propositions Strip */}
+          <section className="bg-white border-y border-brand-border py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              <div className="space-y-2">
+                <Icon name="shield-check" className="w-7 h-7 text-brand-gold mx-auto" />
+                <h4 className="text-xs uppercase font-bold tracking-widest">100% Authentic</h4>
+                <p className="text-xs text-neutral-500">Certified genuine materials directly from accredited European mills.</p>
+              </div>
+              <div className="space-y-2">
+                <Icon name="truck" className="w-7 h-7 text-brand-gold mx-auto" />
+                <h4 className="text-xs uppercase font-bold tracking-widest">Expedited Delivery</h4>
+                <p className="text-xs text-neutral-500">Fast nationwide courier & seamless cash-on-delivery service.</p>
+              </div>
+              <div className="space-y-2">
+                <Icon name="refresh-cw" className="w-7 h-7 text-brand-gold mx-auto" />
+                <h4 className="text-xs uppercase font-bold tracking-widest">Complimentary Exchange</h4>
+                <p className="text-xs text-neutral-500">14-day hassle-free size & styling replacement guarantee.</p>
+              </div>
+              <div className="space-y-2">
+                <Icon name="award" className="w-7 h-7 text-brand-gold mx-auto" />
+                <h4 className="text-xs uppercase font-bold tracking-widest">VIP Concierge</h4>
+                <p className="text-xs text-neutral-500">Personal fashion consultants ready to assist 7 days a week.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 2. SHOP / CATALOG VIEW (Filters & Search)
+    // ==========================================
+    function ShopView({ 
+      products, 
+      selectedCategory, 
+      setSelectedCategory, 
+      searchQuery, 
+      setSearchQuery, 
+      sortOption, 
+      setSortOption, 
+      onSelectProduct,
+      wishlist,
+      onToggleWishlist 
+    }) {
+      const [maxPrice, setMaxPrice] = useState(1000);
+
+      const filteredProducts = useMemo(() => {
+        return products.filter(p => {
+          // Category filter
+          if (selectedCategory === "New Arrivals" && !p.isNew && p.badge !== "New Arrival") return false;
+          if (selectedCategory === "Sale Collection" && !p.originalPrice) return false;
+          if (selectedCategory !== "All Collections" && 
+              selectedCategory !== "New Arrivals" && 
+              selectedCategory !== "Sale Collection") {
+            if (p.category !== selectedCategory && p.gender !== selectedCategory) {
+              return false;
+            }
+          }
+          // Search query filter
+          if (searchQuery.trim() !== "") {
+            const q = searchQuery.toLowerCase();
+            const matchName = p.name.toLowerCase().includes(q);
+            const matchCat = p.category.toLowerCase().includes(q);
+            const matchDesc = p.description.toLowerCase().includes(q);
+            if (!matchName && !matchCat && !matchDesc) return false;
+          }
+          // Price filter
+          if (p.price > maxPrice) return false;
+
+          return true;
+        }).sort((a, b) => {
+          if (sortOption === "price-low") return a.price - b.price;
+          if (sortOption === "price-high") return b.price - a.price;
+          if (sortOption === "rating") return b.rating - a.rating;
+          return 0; // featured default
+        });
+      }, [products, selectedCategory, searchQuery, maxPrice, sortOption]);
+
+      return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          {/* Header & Search */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-brand-border">
+            <div>
+              <span className="text-xs uppercase tracking-[0.25em] text-brand-gold font-bold">The Catalog</span>
+              <h1 className="font-luxury text-4xl font-semibold mt-1">
+                {selectedCategory}
+              </h1>
+              <p className="text-xs text-neutral-500 mt-1">
+                Displaying {filteredProducts.length} curated luxury garments
+              </p>
+            </div>
+
+            {/* Live Search Bar */}
+            <div className="relative w-full md:w-80">
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search jackets, boots, cashmere..."
+                className="w-full bg-white border border-brand-border pl-10 pr-4 py-2.5 text-xs rounded-full focus:outline-none focus:border-brand-gold transition-colors"
+              />
+              <Icon name="search" className="w-4 h-4 text-neutral-400 absolute left-3.5 top-3" />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery("")} 
+                  className="absolute right-3.5 top-2.5 text-neutral-400 hover:text-black text-xs font-bold"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 pt-8">
+            {/* Filter Sidebar */}
+            <aside className="space-y-8">
+              {/* Category selector */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-900 mb-4 pb-2 border-b border-brand-border">
+                  Categories
+                </h3>
+                <ul className="space-y-2 text-xs">
+                  {CATEGORIES.map((cat, idx) => (
+                    <li key={idx}>
+                      <button 
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`w-full text-left py-1.5 px-2.5 rounded transition-colors flex items-center justify-between ${selectedCategory === cat ? 'bg-brand-black text-brand-gold font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-100'}`}
+                      >
+                        <span>{cat}</span>
+                        {selectedCategory === cat && <Icon name="check" className="w-3.5 h-3.5" />}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Price Filter Slider */}
+              <div>
+                <div className="flex justify-between items-center mb-2 pb-2 border-b border-brand-border">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-900">
+                    Max Price
+                  </h3>
+                  <span className="text-xs font-semibold text-brand-goldDark">${maxPrice}</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="50" 
+                  max="1000" 
+                  step="25"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(Number(e.target.value))}
+                  className="w-full accent-brand-gold cursor-pointer"
+                />
+                <div className="flex justify-between text-[10px] text-neutral-400 mt-1">
+                  <span>$50</span>
+                  <span>$1,000</span>
+                </div>
+              </div>
+
+              {/* Sort By Dropdown */}
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-900 mb-2 pb-2 border-b border-brand-border">
+                  Sort By
+                </h3>
+                <select 
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
+                  className="w-full bg-white border border-brand-border text-xs px-3 py-2.5 rounded focus:outline-none focus:border-brand-gold"
+                >
+                  <option value="featured">Featured / Curated</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="rating">Top Customer Rating</option>
+                </select>
+              </div>
+
+              {/* Reset filters shortcut */}
+              {(selectedCategory !== "All Collections" || searchQuery !== "" || maxPrice < 1000) && (
+                <button 
+                  onClick={() => {
+                    setSelectedCategory("All Collections");
+                    setSearchQuery("");
+                    setMaxPrice(1000);
+                  }}
+                  className="w-full py-2 border border-neutral-300 text-xs uppercase tracking-wider font-semibold text-neutral-600 hover:border-black hover:text-black transition-colors"
+                >
+                  Reset All Filters
+                </button>
+              )}
+            </aside>
+
+            {/* Products Grid */}
+            <main className="lg:col-span-3">
+              {filteredProducts.length === 0 ? (
+                <div className="text-center py-24 bg-white border border-dashed border-neutral-300 rounded p-8">
+                  <Icon name="search-x" className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
+                  <h3 className="font-luxury text-2xl font-bold">No Pieces Found</h3>
+                  <p className="text-neutral-500 text-xs mt-1 max-w-sm mx-auto">
+                    We could not find anything matching your exact filter criteria. Try expanding your search or selecting another category.
+                  </p>
+                  <button 
+                    onClick={() => { setSelectedCategory("All Collections"); setSearchQuery(""); setMaxPrice(1000); }}
+                    className="mt-6 px-6 py-2.5 bg-brand-black text-white text-xs uppercase tracking-widest font-semibold hover:bg-neutral-800"
+                  >
+                    View All Designs
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                  {filteredProducts.map(product => (
+                    <ProductCard 
+                      key={product.id}
+                      product={product}
+                      onSelectProduct={onSelectProduct}
+                      isWishlisted={wishlist.includes(product.id)}
+                      onToggleWishlist={onToggleWishlist}
+                    />
+                  ))}
+                </div>
+              )}
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 3. PRODUCT CARD COMPONENT
+    // ==========================================
+    function ProductCard({ product, onSelectProduct, isWishlisted, onToggleWishlist }) {
+      const discountPercent = product.originalPrice 
+        ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) 
+        : 0;
+
+      return (
+        <div className="group bg-white border border-neutral-200/80 rounded-sm overflow-hidden flex flex-col hover:shadow-xl transition-all duration-300">
+          {/* Image Container with Badges */}
+          <div className="relative aspect-[3/4] bg-neutral-100 overflow-hidden cursor-pointer" onClick={() => onSelectProduct(product)}>
+            <img 
+              src={product.images[0]} 
+              alt={product.name} 
+              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+            />
+            {product.images[1] && (
+              <img 
+                src={product.images[1]} 
+                alt={product.name} 
+                className="w-full h-full object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              />
+            )}
+
+            {/* Badges */}
+            <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+              {product.badge && (
+                <span className="px-2.5 py-1 bg-brand-black/90 backdrop-blur-sm text-brand-gold text-[10px] uppercase font-bold tracking-wider rounded-sm">
+                  {product.badge}
+                </span>
+              )}
+              {discountPercent > 0 && (
+                <span className="px-2 py-0.5 bg-red-600 text-white text-[10px] uppercase font-bold tracking-wider rounded-sm">
+                  -{discountPercent}%
+                </span>
+              )}
+            </div>
+
+            {/* Wishlist Button */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleWishlist(product.id);
+              }}
+              className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-neutral-700 hover:text-red-600 hover:scale-110 transition-all z-10 shadow-sm"
+            >
+              <Icon 
+                name="heart" 
+                className={`w-4 h-4 ${isWishlisted ? 'text-red-600 fill-red-600' : ''}`} 
+              />
+            </button>
+
+            {/* Quick Action Overlay */}
+            <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex justify-center">
+              <span className="text-white text-xs uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                Inspect Piece <Icon name="eye" className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+
+          {/* Details */}
+          <div className="p-4 flex flex-col flex-1 justify-between bg-white">
+            <div>
+              <div className="flex items-center justify-between text-[11px] text-neutral-500 uppercase tracking-wider mb-1">
+                <span>{product.category}</span>
+                <span className="flex items-center gap-1 text-amber-600 font-semibold">
+                  ★ {product.rating}
+                </span>
+              </div>
+              <h3 
+                onClick={() => onSelectProduct(product)}
+                className="font-luxury text-lg font-semibold text-brand-black hover:text-brand-goldDark cursor-pointer line-clamp-1 transition-colors"
+              >
+                {product.name}
+              </h3>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between">
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm font-bold text-brand-black tracking-wide">${product.price}</span>
+                {product.originalPrice && (
+                  <span className="text-xs text-neutral-400 line-through">${product.originalPrice}</span>
+                )}
+              </div>
+              <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400">
+                {product.sizes.length} Sizes
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 4. PRODUCT DETAIL VIEW (Gallery Zoom, Sizes, Specs)
+    // ==========================================
+    function ProductDetailView({ product, allProducts, onSelectProduct, onAddToCart, wishlist, onToggleWishlist, onBack }) {
+      const [activeImgIndex, setActiveImgIndex] = useState(0);
+      const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
+      const [selectedColor, setSelectedColor] = useState(product.colors[0]?.name || "Standard");
+      const [quantity, setQuantity] = useState(1);
+      const [isZoomed, setIsZoomed] = useState(false);
+      const [activeTab, setActiveTab] = useState("description");
+
+      const related = useMemo(() => {
+        return allProducts
+          .filter(p => p.id !== product.id && (p.category === product.category || p.gender === product.gender))
+          .slice(0, 4);
+      }, [product, allProducts]);
+
+      return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-xs uppercase tracking-wider text-neutral-500 mb-8">
+            <button onClick={onBack} className="hover:text-black flex items-center gap-1">
+              <Icon name="arrow-left" className="w-3.5 h-3.5" /> Back
+            </button>
+            <span>/</span>
+            <span>{product.gender || "Catalog"}</span>
+            <span>/</span>
+            <span className="text-brand-black font-semibold">{product.name}</span>
+          </nav>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+            {/* Gallery Section */}
+            <div className="space-y-4">
+              {/* Main Photo with Zoom Feature */}
+              <div 
+                className="relative aspect-[3/4] bg-neutral-100 rounded-sm overflow-hidden cursor-crosshair border border-neutral-200"
+                onMouseEnter={() => setIsZoomed(true)}
+                onMouseLeave={() => setIsZoomed(false)}
+              >
+                <img 
+                  src={product.images[activeImgIndex] || product.images[0]} 
+                  alt={product.name} 
+                  className={`w-full h-full object-cover transition-transform duration-300 ${isZoomed ? 'scale-125' : 'scale-100'}`}
+                />
+                {product.badge && (
+                  <span className="absolute top-4 left-4 px-3 py-1 bg-brand-black text-brand-gold text-xs uppercase font-bold tracking-widest">
+                    {product.badge}
+                  </span>
+                )}
+                <div className="absolute bottom-4 right-4 bg-brand-black/70 backdrop-blur-sm text-white text-[10px] px-2.5 py-1 tracking-wider uppercase rounded">
+                  Hover to Zoom
+                </div>
+              </div>
+
+              {/* Thumbnails */}
+              {product.images.length > 1 && (
+                <div className="flex gap-3">
+                  {product.images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveImgIndex(idx)}
+                      className={`relative w-20 h-24 rounded-sm overflow-hidden border-2 transition-all ${activeImgIndex === idx ? 'border-brand-gold scale-105' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                    >
+                      <img src={img} alt="Thumbnail" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Product Meta & Configuration */}
+            <div className="flex flex-col justify-between space-y-8">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs uppercase font-bold tracking-[0.25em] text-brand-gold">
+                    {product.category}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-xs text-neutral-600">
+                    <span className="text-amber-500 font-bold">★ {product.rating}</span>
+                    <span>({product.reviewsCount} VIP reviews)</span>
+                  </div>
+                </div>
+
+                <h1 className="font-luxury text-3xl sm:text-4xl lg:text-5xl font-semibold text-brand-black leading-tight">
+                  {product.name}
+                </h1>
+
+                {/* Price Display */}
+                <div className="flex items-baseline gap-4 pt-2">
+                  <span className="text-2xl sm:text-3xl font-bold tracking-tight text-brand-black">
+                    ${product.price}
+                  </span>
+                  {product.originalPrice && (
+                    <>
+                      <span className="text-base text-neutral-400 line-through">
+                        ${product.originalPrice}
+                      </span>
+                      <span className="text-xs font-bold text-red-600 uppercase tracking-widest">
+                        Save ${product.originalPrice - product.price}
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                <p className="text-neutral-600 text-sm leading-relaxed font-light pt-2">
+                  {product.description}
+                </p>
+
+                {/* Color Selection */}
+                {product.colors && product.colors.length > 0 && (
+                  <div className="pt-4 space-y-2">
+                    <div className="flex justify-between text-xs font-semibold uppercase tracking-wider">
+                      <span>Color: <strong className="text-brand-black">{selectedColor}</strong></span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {product.colors.map((c, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setSelectedColor(c.name)}
+                          title={c.name}
+                          className={`w-8 h-8 rounded-full border-2 transition-transform ${selectedColor === c.name ? 'border-brand-gold scale-110 shadow-md ring-2 ring-brand-gold/30' : 'border-neutral-300 hover:scale-105'}`}
+                          style={{ backgroundColor: c.hex }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Size Selection */}
+                <div className="pt-4 space-y-2">
+                  <div className="flex justify-between text-xs font-semibold uppercase tracking-wider">
+                    <span>Select Size: <strong className="text-brand-black">{selectedSize}</strong></span>
+                    <span className="text-brand-goldDark underline cursor-pointer hover:text-black">
+                      Size & Fit Guide
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2.5">
+                    {product.sizes.map((s, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedSize(s)}
+                        className={`w-12 h-11 text-xs uppercase font-bold tracking-wider border rounded transition-all ${selectedSize === s ? 'bg-brand-black text-brand-gold border-brand-black shadow-md' : 'bg-white text-neutral-800 border-neutral-300 hover:border-black'}`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quantity & Stock Status */}
+                <div className="pt-4 flex items-center gap-6">
+                  <div className="space-y-1">
+                    <label className="text-[11px] uppercase font-bold tracking-wider text-neutral-500">
+                      Quantity
+                    </label>
+                    <div className="flex items-center border border-neutral-300 rounded bg-white">
+                      <button 
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="px-3.5 py-2 text-neutral-600 hover:text-black"
+                      >
+                        -
+                      </button>
+                      <span className="w-10 text-center font-bold text-xs">{quantity}</span>
+                      <button 
+                        onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                        className="px-3.5 py-2 text-neutral-600 hover:text-black"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-neutral-500 pt-5">
+                    {product.stock > 0 ? (
+                      <span className="text-emerald-700 font-medium flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                        In Stock ({product.stock} items ready to dispatch)
+                      </span>
+                    ) : (
+                      <span className="text-red-600 font-medium">Sold Out — Made to Order</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-6 border-t border-brand-border space-y-3">
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => onAddToCart(product, selectedSize, selectedColor, quantity)}
+                    className="flex-1 py-4 bg-brand-black hover:bg-neutral-800 text-white font-semibold uppercase text-xs tracking-[0.25em] flex items-center justify-center gap-2 transition-all shadow-xl rounded-sm"
+                  >
+                    <Icon name="shopping-bag" className="w-4 h-4 text-brand-gold" />
+                    Add to Bag
+                  </button>
+
+                  <button 
+                    onClick={() => onToggleWishlist(product.id)}
+                    className="w-14 h-14 border border-neutral-300 rounded-sm flex items-center justify-center text-neutral-700 hover:border-black hover:text-red-600 transition-colors"
+                    title="Toggle Wishlist"
+                  >
+                    <Icon 
+                      name="heart" 
+                      className={`w-5 h-5 ${wishlist.includes(product.id) ? 'text-red-600 fill-red-600' : ''}`} 
+                    />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-center text-[11px] text-neutral-500 pt-2">
+                  <div className="border border-neutral-200 py-2.5 rounded bg-white">
+                    🔒 256-Bit SSL Encrypted Order
+                  </div>
+                  <div className="border border-neutral-200 py-2.5 rounded bg-white">
+                    ✈️ Free Express Courier Over $250
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Luxury Specifications Tabs */}
+          <div className="mt-20 border-t border-brand-border pt-10">
+            <div className="flex border-b border-brand-border gap-8">
+              {["description", "materials", "delivery"].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`pb-3 text-xs uppercase font-bold tracking-[0.2em] transition-colors ${activeTab === tab ? 'border-b-2 border-brand-gold text-brand-black' : 'text-neutral-400 hover:text-black'}`}
+                >
+                  {tab === "description" ? "Editorial Notes" : tab === "materials" ? "Materials & Care" : "White-Glove Shipping"}
+                </button>
+              ))}
+            </div>
+
+            <div className="py-6 text-sm text-neutral-600 font-light leading-relaxed max-w-3xl">
+              {activeTab === "description" && (
+                <p>
+                  Part of THE CHOICE perpetual luxury series. Conceived for discerning wearers who view personal style as an architectural expression. Each garment undergoes strict quality control and is numbered for provenance.
+                </p>
+              )}
+              {activeTab === "materials" && (
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Natural organic fibers harvested using ethical European mills.</li>
+                  <li>Hand-buffed horn and recycled gold hardware.</li>
+                  <li>Dry clean only with non-toxic hydrocarbon solvents.</li>
+                  <li>Store in breathable cedar garment bags (included).</li>
+                </ul>
+              )}
+              {activeTab === "delivery" && (
+                <p>
+                  Complimentary nationwide shipping in Bangladesh (Dhaka, Chittagong, Sylhet, etc.) with Cash on Delivery option. Global orders dispatched through DHL Express with fully insured door-to-door tracking.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Related Products Carousel / Grid */}
+          {related.length > 0 && (
+            <div className="mt-20 border-t border-brand-border pt-12">
+              <div className="text-center max-w-xl mx-auto mb-10">
+                <span className="text-xs uppercase tracking-[0.3em] text-brand-gold font-bold">Complete The Aesthetic</span>
+                <h2 className="font-luxury text-3xl font-semibold mt-1">Related Masterpieces</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {related.map(p => (
+                  <ProductCard 
+                    key={p.id}
+                    product={p}
+                    onSelectProduct={onSelectProduct}
+                    isWishlisted={wishlist.includes(p.id)}
+                    onToggleWishlist={onToggleWishlist}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 5. SLIDE-OVER LUXURY CART DRAWER
+    // ==========================================
+    function CartDrawer({ isOpen, onClose, cart, total, onUpdateQty, onRemove, onProceedCheckout }) {
+      if (!isOpen) return null;
+
+      return (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div 
+            onClick={onClose} 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+          />
+
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div className="w-screen max-w-md bg-white border-l border-brand-border shadow-2xl flex flex-col">
+              {/* Header */}
+              <div className="p-6 border-b border-brand-border flex items-center justify-between">
+                <div>
+                  <h2 className="font-luxury text-2xl font-bold tracking-tight">Shopping Bag</h2>
+                  <p className="text-xs text-neutral-500 uppercase tracking-wider">
+                    {cart.reduce((a, b) => a + b.quantity, 0)} Items Selected
+                  </p>
+                </div>
+                <button 
+                  onClick={onClose}
+                  className="p-2 text-neutral-400 hover:text-black transition-colors"
+                >
+                  <Icon name="x" className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Items List */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {cart.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
+                    <Icon name="shopping-bag" className="w-12 h-12 text-neutral-300" />
+                    <h3 className="font-luxury text-2xl font-bold">Your Bag is Empty</h3>
+                    <p className="text-xs text-neutral-500 max-w-xs">
+                      Explore our new arrivals and curate your signature look today.
+                    </p>
+                    <button 
+                      onClick={onClose}
+                      className="px-6 py-2.5 bg-brand-black text-white text-xs uppercase tracking-widest font-semibold hover:bg-neutral-800"
+                    >
+                      Start Shopping
+                    </button>
+                  </div>
+                ) : (
+                  cart.map((item, index) => (
+                    <div key={`${item.id}-${item.size}-${item.color}`} className="flex gap-4 pb-6 border-b border-neutral-100">
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className="w-20 h-24 object-cover rounded bg-neutral-100 flex-shrink-0"
+                      />
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-start">
+                            <h4 className="font-luxury text-base font-semibold leading-tight line-clamp-1">
+                              {item.name}
+                            </h4>
+                            <button 
+                              onClick={() => onRemove(index)}
+                              className="text-neutral-400 hover:text-red-600 text-xs pl-2"
+                              title="Remove item"
+                            >
+                              <Icon name="trash-2" className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <p className="text-xs text-neutral-500 mt-1">
+                            Size: <span className="font-medium text-black">{item.size}</span> | Color: <span className="font-medium text-black">{item.color}</span>
+                          </p>
+                        </div>
+
+                        <div className="flex justify-between items-center mt-3">
+                          <div className="flex items-center border border-neutral-200 rounded">
+                            <button 
+                              onClick={() => onUpdateQty(index, -1)}
+                              className="px-2 py-0.5 text-xs text-neutral-600 hover:text-black"
+                            >
+                              -
+                            </button>
+                            <span className="px-2 text-xs font-bold">{item.quantity}</span>
+                            <button 
+                              onClick={() => onUpdateQty(index, 1)}
+                              className="px-2 py-0.5 text-xs text-neutral-600 hover:text-black"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <span className="text-sm font-bold text-black">
+                            ${item.price * item.quantity}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Subtotal & Checkout CTA */}
+              {cart.length > 0 && (
+                <div className="p-6 border-t border-brand-border bg-neutral-50/50 space-y-4">
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between text-neutral-500">
+                      <span>Subtotal</span>
+                      <span className="text-black font-semibold">${total}</span>
+                    </div>
+                    <div className="flex justify-between text-neutral-500">
+                      <span>Shipping</span>
+                      <span className="text-emerald-700 font-semibold">{total >= 250 ? 'FREE (VIP Promo)' : '$20'}</span>
+                    </div>
+                    <div className="flex justify-between text-base font-bold text-black pt-2 border-t border-neutral-200">
+                      <span>Total</span>
+                      <span>${total >= 250 ? total : total + 20}</span>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={onProceedCheckout}
+                    className="w-full py-4 bg-brand-black hover:bg-neutral-800 text-white font-semibold uppercase text-xs tracking-[0.25em] flex items-center justify-center gap-2 transition-all shadow-xl"
+                  >
+                    <span>Proceed to Checkout</span>
+                    <Icon name="arrow-right" className="w-4 h-4 text-brand-gold" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 6. CHECKOUT VIEW (Cash On Delivery & Address)
+    // ==========================================
+    function CheckoutView({ cart, total, onCompleteOrder, onCancel }) {
+      const [formData, setFormData] = useState({
+        name: "Tanvir Ahmed",
+        phone: "+880 1711 234567",
+        email: "tanvir.fashion@example.com",
+        district: "Dhaka",
+        area: "Gulshan 2",
+        address: "House 14, Road 71, Block NW",
+        notes: "Please call upon arrival at front security concierge."
+      });
+
+      const [paymentMethod, setPaymentMethod] = useState("cod"); // 'cod' or 'card'
+      const [isSubmitting, setIsSubmitting] = useState(false);
+
+      const currentAreas = useMemo(() => {
+        const found = BANGLADESH_DISTRICTS.find(d => d.name === formData.district);
+        return found ? found.areas : [];
+      }, [formData.district]);
+
+      const shippingCost = total >= 250 ? 0 : 20;
+      const finalGrandTotal = total + shippingCost;
+
+      const handleSubmitOrder = (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        setTimeout(() => {
+          const newOrder = {
+            id: `TC-${Math.floor(100000 + Math.random() * 900000)}`,
+            date: new Date().toISOString().split('T')[0],
+            customer: { ...formData },
+            items: [...cart],
+            subtotal: total,
+            shipping: shippingCost,
+            total: finalGrandTotal,
+            paymentMethod: paymentMethod === 'cod' ? 'Cash on Delivery' : 'Secure Card Authorization',
+            status: 'Processing'
+          };
+          setIsSubmitting(false);
+          onCompleteOrder(newOrder);
+        }, 1200);
+      };
+
+      if (cart.length === 0) {
+        return (
+          <div className="max-w-2xl mx-auto py-24 px-4 text-center">
+            <h2 className="font-luxury text-3xl font-bold">Your Bag is Empty</h2>
+            <p className="text-neutral-500 text-sm mt-2 mb-6">Select pieces before checking out.</p>
+            <button onClick={onCancel} className="px-6 py-3 bg-black text-white text-xs uppercase tracking-widest font-semibold">
+              Browse Collections
+            </button>
+          </div>
+        );
+      }
+
+      return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="mb-8">
+            <button onClick={onCancel} className="text-xs uppercase tracking-widest font-semibold text-neutral-500 hover:text-black flex items-center gap-1 mb-2">
+              <Icon name="arrow-left" className="w-4 h-4" /> Return to Store
+            </button>
+            <h1 className="font-luxury text-4xl font-semibold">VIP Direct Checkout</h1>
+            <p className="text-xs text-neutral-500 tracking-wider uppercase mt-1">
+              Encrypted High-Security Order Submission
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            {/* Delivery Info */}
+            <div className="lg:col-span-7 space-y-8">
+              <div className="bg-white p-6 sm:p-8 rounded border border-brand-border space-y-6">
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-brand-gold pb-3 border-b border-brand-border flex items-center gap-2">
+                  <Icon name="map-pin" className="w-4 h-4" /> 1. Client Delivery Details
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5">Full Name *</label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs rounded focus:outline-none focus:border-brand-gold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5">Phone Number *</label>
+                    <input 
+                      type="tel" 
+                      required 
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs rounded focus:outline-none focus:border-brand-gold"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5">Email Address *</label>
+                  <input 
+                    type="email" 
+                    required 
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs rounded focus:outline-none focus:border-brand-gold"
+                  />
+                </div>
+
+                {/* District & Area Selection */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5">District / Region *</label>
+                    <select 
+                      value={formData.district}
+                      onChange={(e) => {
+                        const newDist = e.target.value;
+                        const firstArea = BANGLADESH_DISTRICTS.find(d => d.name === newDist)?.areas[0] || "";
+                        setFormData({ ...formData, district: newDist, area: firstArea });
+                      }}
+                      className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs rounded focus:outline-none focus:border-brand-gold"
+                    >
+                      {BANGLADESH_DISTRICTS.map((d, i) => (
+                        <option key={i} value={d.name}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5">Area / Neighborhood *</label>
+                    <select 
+                      value={formData.area}
+                      onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                      className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs rounded focus:outline-none focus:border-brand-gold"
+                    >
+                      {currentAreas.map((area, i) => (
+                        <option key={i} value={area}>{area}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5">Full Street Address & Apartment *</label>
+                  <textarea 
+                    rows="2"
+                    required
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs rounded focus:outline-none focus:border-brand-gold"
+                    placeholder="E.g. House 14, Road 71, Flat 4B, Gulshan 2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5">Special Courier Instructions</label>
+                  <input 
+                    type="text" 
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="w-full bg-neutral-50 border border-neutral-300 px-3.5 py-2.5 text-xs rounded focus:outline-none focus:border-brand-gold"
+                    placeholder="Gate code, best delivery hours, etc."
+                  />
+                </div>
+              </div>
+
+              {/* Payment Method Option */}
+              <div className="bg-white p-6 sm:p-8 rounded border border-brand-border space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-brand-gold pb-3 border-b border-brand-border flex items-center gap-2">
+                  <Icon name="credit-card" className="w-4 h-4" /> 2. Payment Terms
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div 
+                    onClick={() => setPaymentMethod("cod")}
+                    className={`p-4 rounded border-2 cursor-pointer transition-all ${paymentMethod === 'cod' ? 'border-brand-gold bg-brand-gold/5 shadow-sm' : 'border-neutral-200 hover:border-neutral-300'}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider">Cash on Delivery</span>
+                      <Icon name="banknote" className="w-5 h-5 text-brand-gold" />
+                    </div>
+                    <p className="text-[11px] text-neutral-500 mt-2 leading-relaxed">
+                      Inspect your bespoke package at your doorstep before settling payment with our courier.
+                    </p>
+                  </div>
+
+                  <div 
+                    onClick={() => setPaymentMethod("card")}
+                    className={`p-4 rounded border-2 cursor-pointer transition-all ${paymentMethod === 'card' ? 'border-brand-gold bg-brand-gold/5 shadow-sm' : 'border-neutral-200 hover:border-neutral-300'}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider">Online Card / VIP Wire</span>
+                      <Icon name="shield-check" className="w-5 h-5 text-brand-gold" />
+                    </div>
+                    <p className="text-[11px] text-neutral-500 mt-2 leading-relaxed">
+                      Instant Visa, MasterCard, Amex & bKash VIP merchant gateway authorization.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Summary & Submit Button */}
+            <div className="lg:col-span-5">
+              <div className="bg-white p-6 sm:p-8 rounded border border-brand-border sticky top-28 space-y-6 shadow-sm">
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-neutral-900 pb-3 border-b border-brand-border">
+                  Order Summary ({cart.length} unique pieces)
+                </h3>
+
+                {/* Items preview */}
+                <div className="max-h-60 overflow-y-auto space-y-3 pr-2">
+                  {cart.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-3 text-xs">
+                      <img src={item.image} alt={item.name} className="w-12 h-14 object-cover rounded bg-neutral-100" />
+                      <div className="flex-1">
+                        <p className="font-semibold text-black line-clamp-1">{item.name}</p>
+                        <p className="text-neutral-500 text-[11px]">Qty: {item.quantity} | Size: {item.size} | Color: {item.color}</p>
+                      </div>
+                      <span className="font-bold text-black">${item.price * item.quantity}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-4 border-t border-neutral-100 space-y-2 text-xs">
+                  <div className="flex justify-between text-neutral-600">
+                    <span>Subtotal</span>
+                    <span>${total}</span>
+                  </div>
+                  <div className="flex justify-between text-neutral-600">
+                    <span>White-Glove Courier</span>
+                    <span>{shippingCost === 0 ? "FREE" : `$${shippingCost}`}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-bold text-black pt-3 border-t border-neutral-200">
+                    <span>Total Amount</span>
+                    <span className="text-brand-goldDark text-lg">${finalGrandTotal}</span>
+                  </div>
+                </div>
+
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-4 bg-brand-black hover:bg-neutral-800 text-white font-semibold uppercase text-xs tracking-[0.25em] flex items-center justify-center gap-2 transition-all shadow-xl rounded-sm disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <span>Registering Order with Atelier...</span>
+                  ) : (
+                    <>
+                      <span>Confirm & Place Order</span>
+                      <Icon name="check-circle" className="w-4 h-4 text-brand-gold" />
+                    </>
+                  )}
+                </button>
+
+                <p className="text-[10px] text-center text-neutral-400">
+                  By clicking confirm, you agree to THE CHOICE Terms of Luxury Service & Privacy Policy.
+                </p>
+              </div>
+            </div>
+          </form>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // 7. ACCOUNT & ADMIN DASHBOARD VIEW
+    // ==========================================
+    function AccountAdminView({ currentUser, setCurrentUser, orders, setOrders, products, setProducts, onSelectProduct, notify }) {
+      const [viewMode, setViewMode] = useState(currentUser.role === 'admin' ? 'admin' : 'orders');
+      
+      // Admin Product Form State
+      const [newProduct, setNewProduct] = useState({
+        name: "",
+        category: "Men's Fashion",
+        gender: "Men's Fashion",
+        price: 195,
+        originalPrice: 250,
+        badge: "New Arrival",
+        stock: 20,
+        description: "",
+        sizes: "S, M, L, XL",
+        images: "https://images.unsplash.com/photo-1544022613-e87ca75a784a?q=80&w=1000&auto=format&fit=crop"
+      });
+
+      // Role switcher (For easy testing of VIP customer vs Admin panel)
+      const toggleRole = () => {
+        const nextRole = currentUser.role === 'admin' ? 'customer' : 'admin';
+        setCurrentUser({
+          ...currentUser,
+          role: nextRole,
+          name: nextRole === 'admin' ? "Creative Director (Admin)" : "Tanvir Ahmed"
+        });
+        setViewMode(nextRole === 'admin' ? 'admin' : 'orders');
+        notify(`Switched session to ${nextRole.toUpperCase()}`);
+      };
+
+      const handleAddProduct = (e) => {
+        e.preventDefault();
+        const p = {
+          id: `TC-${Math.floor(100 + Math.random() * 900)}`,
+          name: newProduct.name,
+          category: newProduct.category,
+          gender: newProduct.gender,
+          price: Number(newProduct.price),
+          originalPrice: Number(newProduct.originalPrice),
+          badge: newProduct.badge,
+          stock: Number(newProduct.stock),
+          rating: 5.0,
+          reviewsCount: 1,
+          description: newProduct.description || "Masterpiece from the new luxury collection.",
+          sizes: newProduct.sizes.split(",").map(s => s.trim()),
+          colors: [{ name: "Signature", hex: "#0A0A0A" }],
+          images: [newProduct.images],
+          featured: true,
+          isNew: true
+        };
+
+        setProducts([p, ...products]);
+        notify(`Product "${p.name}" added to catalog.`);
+        setNewProduct({
+          name: "",
+          category: "Men's Fashion",
+          gender: "Men's Fashion",
+          price: 195,
+          originalPrice: 250,
+          badge: "New Arrival",
+          stock: 20,
+          description: "",
+          sizes: "S, M, L, XL",
+          images: "https://images.unsplash.com/photo-1544022613-e87ca75a784a?q=80&w=1000&auto=format&fit=crop"
+        });
+      };
+
+      const deleteProduct = (id) => {
+        if (confirm("Are you sure you want to retire this product from catalog?")) {
+          setProducts(products.filter(p => p.id !== id));
+          notify("Product removed.");
+        }
+      };
+
+      const updateOrderStatus = (orderId, newStatus) => {
+        setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+        notify(`Order ${orderId} status set to ${newStatus}`);
+      };
+
+      // Sales Metrics
+      const totalRevenue = useMemo(() => {
+        return orders.reduce((acc, o) => acc + (o.total || 0), 0);
+      }, [orders]);
+
+      return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+          {/* Header & Role Switcher */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-border">
+            <div>
+              <span className="text-xs uppercase tracking-[0.25em] text-brand-gold font-bold">Portal Access</span>
+              <h1 className="font-luxury text-4xl font-semibold mt-1">
+                {currentUser.role === 'admin' ? "Executive Admin Portal" : "VIP Client Account"}
+              </h1>
+              <p className="text-xs text-neutral-500 mt-1">
+                Logged in as <strong>{currentUser.name}</strong> ({currentUser.email})
+              </p>
+            </div>
+
+            <button 
+              onClick={toggleRole}
+              className="px-4 py-2 border border-brand-gold bg-brand-gold/10 text-brand-black hover:bg-brand-gold hover:text-white transition-all text-xs uppercase font-bold tracking-wider rounded"
+            >
+              Switch To {currentUser.role === 'admin' ? "Customer Profile" : "Admin Dashboard"}
+            </button>
+          </div>
+
+          {/* ADMIN VIEW */}
+          {currentUser.role === 'admin' && (
+            <div className="space-y-12">
+              {/* Analytics Metric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white p-6 rounded border border-brand-border shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <span className="text-xs uppercase tracking-wider text-neutral-500 font-bold">Total Gross Revenue</span>
+                    <Icon name="dollar-sign" className="w-5 h-5 text-brand-gold" />
+                  </div>
+                  <h3 className="text-2xl font-bold font-luxury mt-2">${totalRevenue.toLocaleString()}</h3>
+                  <span className="text-[11px] text-emerald-600 font-medium">↑ 14.8% vs last month</span>
+                </div>
+
+                <div className="bg-white p-6 rounded border border-brand-border shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <span className="text-xs uppercase tracking-wider text-neutral-500 font-bold">Orders Processed</span>
+                    <Icon name="shopping-bag" className="w-5 h-5 text-brand-gold" />
+                  </div>
+                  <h3 className="text-2xl font-bold font-luxury mt-2">{orders.length}</h3>
+                  <span className="text-[11px] text-neutral-500 font-medium">Active client dispatches</span>
+                </div>
+
+                <div className="bg-white p-6 rounded border border-brand-border shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <span className="text-xs uppercase tracking-wider text-neutral-500 font-bold">Total Inventory Pieces</span>
+                    <Icon name="package" className="w-5 h-5 text-brand-gold" />
+                  </div>
+                  <h3 className="text-2xl font-bold font-luxury mt-2">
+                    {products.reduce((acc, p) => acc + (p.stock || 0), 0)}
+                  </h3>
+                  <span className="text-[11px] text-amber-600 font-medium">{products.length} live product references</span>
+                </div>
+
+                <div className="bg-white p-6 rounded border border-brand-border shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <span className="text-xs uppercase tracking-wider text-neutral-500 font-bold">Average Order Value</span>
+                    <Icon name="trending-up" className="w-5 h-5 text-brand-gold" />
+                  </div>
+                  <h3 className="text-2xl font-bold font-luxury mt-2">
+                    ${orders.length > 0 ? Math.round(totalRevenue / orders.length) : 0}
+                  </h3>
+                  <span className="text-[11px] text-neutral-500 font-medium">High-ticket luxury benchmark</span>
+                </div>
+              </div>
+
+              {/* Order Status Management */}
+              <div className="bg-white p-6 sm:p-8 rounded border border-brand-border space-y-6">
+                <div className="flex justify-between items-center pb-4 border-b border-brand-border">
+                  <h3 className="font-luxury text-2xl font-semibold">Client Orders & Logistics Tracking</h3>
+                  <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                    {orders.length} total orders
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-neutral-200 text-neutral-400 uppercase tracking-widest text-[10px]">
+                        <th className="py-3 px-4">Order ID</th>
+                        <th className="py-3 px-4">Client</th>
+                        <th className="py-3 px-4">District / Address</th>
+                        <th className="py-3 px-4">Items</th>
+                        <th className="py-3 px-4">Total</th>
+                        <th className="py-3 px-4">Payment</th>
+                        <th className="py-3 px-4">Status & Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-100">
+                      {orders.map((o) => (
+                        <tr key={o.id} className="hover:bg-neutral-50">
+                          <td className="py-3 px-4 font-mono font-bold text-black">{o.id}</td>
+                          <td className="py-3 px-4">
+                            <span className="font-semibold text-black">{o.customer?.name}</span>
+                            <div className="text-[10px] text-neutral-500">{o.customer?.phone}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="font-medium text-black">{o.customer?.district}</span>, {o.customer?.area}
+                          </td>
+                          <td className="py-3 px-4">
+                            {o.items?.map((it, i) => (
+                              <div key={i} className="text-[11px] text-neutral-600">
+                                • {it.name} ({it.size}) × {it.quantity}
+                              </div>
+                            ))}
+                          </td>
+                          <td className="py-3 px-4 font-bold text-black">${o.total}</td>
+                          <td className="py-3 px-4 text-neutral-600">{o.paymentMethod}</td>
+                          <td className="py-3 px-4">
+                            <select 
+                              value={o.status}
+                              onChange={(e) => updateOrderStatus(o.id, e.target.value)}
+                              className="bg-neutral-50 border border-neutral-300 text-xs px-2.5 py-1 rounded font-medium focus:outline-none focus:border-brand-gold"
+                            >
+                              <option value="Processing">Processing</option>
+             
